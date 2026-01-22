@@ -5,6 +5,29 @@ import numpy as np
 from PIL import Image
 import os
 import io
+import requests
+
+def download_from_gdrive(file_id, output_path):
+    url = "https://drive.google.com/uc?export=download"
+    session = requests.Session()
+
+    response = session.get(url, params={"id": file_id}, stream=True)
+    token = None
+    for key, value in response.cookies.items():
+        if key.startswith("download_warning"):
+            token = value
+
+    if token:
+        response = session.get(
+            url, params={"id": file_id, "confirm": token}, stream=True
+        )
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "wb") as f:
+        for chunk in response.iter_content(32768):
+            if chunk:
+                f.write(chunk)
+
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Image Processing App", page_icon="🖼️", layout="wide")
@@ -165,24 +188,35 @@ IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, 3)
 @st.cache_resource
 def load_steganography_models():
     """Loads and returns the trained encoder and decoder models."""
-    print("Loading models...")
     try:
-        model_dir = os.path.join('..', 'Models')
-        encoder_path = os.path.join(model_dir, 'final_encoder.keras')
-        decoder_path = os.path.join(model_dir, 'final_decoder.keras')
+        print("Loading models...")
 
-        if not os.path.exists(encoder_path) or not os.path.exists(decoder_path):
-            st.error(f"Error: Model files not found. Looked in: {os.path.abspath(model_dir)}")
-            st.error("Ensure 'final_encoder.keras' and 'final_decoder.keras' are in the 'Models' folder.")
-            return None, None
+        # Google Drive file IDs
+        ENCODER_FILE_ID = "14g_uRQN8cN5xI_80vPRqP23k_1CK-U3t"
+        DECODER_FILE_ID = "1u0oAqGgjF-u9F3Y1YI6_mY96VU2XyGj3"
 
-        encoder = load_model(encoder_path)
-        decoder = load_model(decoder_path)
+        model_dir = os.path.join("Models")
+        encoder_path = os.path.join(model_dir, "final_encoder.keras")
+        decoder_path = os.path.join(model_dir, "final_decoder.keras")
+
+        # Download models if they don't exist
+        if not os.path.exists(encoder_path):
+            download_from_gdrive(ENCODER_FILE_ID, encoder_path)
+
+        if not os.path.exists(decoder_path):
+            download_from_gdrive(DECODER_FILE_ID, decoder_path)
+
+        # Load models
+        encoder = load_model(encoder_path, compile=False)
+        decoder = load_model(decoder_path, compile=False)
+
         print("Models loaded successfully.")
         return encoder, decoder
+
     except Exception as e:
         st.error(f"An error occurred while loading the models: {e}")
         return None, None
+
 
 # --- 2. Image Preprocessing Function ---
 def preprocess_image(image_file, target_size=(IMG_WIDTH, IMG_HEIGHT)):
