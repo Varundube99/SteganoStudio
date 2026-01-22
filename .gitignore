@@ -1,0 +1,21 @@
+# Models & weights
+Models/
+*.keras
+*.h5
+*.pkl
+
+# Training / research
+Training.py
+Preprocessing.py
+Model.py
+Notebooks/
+Dataset/
+
+# Environment / cache
+venv/
+__pycache__/
+*.pyc
+
+# OS
+Thumbs.db
+.DS_Store
