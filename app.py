@@ -1,13 +1,11 @@
 import streamlit as st
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+from huggingface_hub import hf_hub_download
 import numpy as np
 from PIL import Image
 import os
 import io
-import requests
-
-
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Image Processing App", page_icon="🖼️", layout="wide")
@@ -165,83 +163,27 @@ IMG_WIDTH = 64
 IMG_SHAPE = (IMG_HEIGHT, IMG_WIDTH, 3)
 
 # --- 1. Load Models  ---
-import zipfile
-import requests
-import tensorflow as tf
-
 @st.cache_resource
 def load_steganography_models():
-    def download_and_extract(file_id, zip_name, extract_dir):
-        
-        if os.path.exists(extract_dir):
-            return
+    repo_id = "dubevarun/stegano-models"
+    token = st.secrets["HF_TOKEN"]
 
-        url = "https://drive.google.com/uc?export=download"
-        session = requests.Session()
+    encoder_path = hf_hub_download(
+        repo_id=repo_id,
+        filename="final_encoder.keras",
+        token=token
+    )
 
-        response = session.get(url, params={"id": file_id}, stream=True)
-        token = None
-        for key, value in response.cookies.items():
-            if key.startswith("download_warning"):
-                token = value
+    decoder_path = hf_hub_download(
+        repo_id=repo_id,
+        filename="final_decoder.keras",
+        token=token
+    )
 
-        if token:
-            response = session.get(
-                url, params={"id": file_id, "confirm": token}, stream=True
-            )
+    encoder = load_model(encoder_path, compile=False)
+    decoder = load_model(decoder_path, compile=False)
 
-        
-        with open(zip_name, "wb") as f:
-            for chunk in response.iter_content(32768):
-                if chunk:
-                    f.write(chunk)
-
-        # Extract
-        with zipfile.ZipFile(zip_name, "r") as zip_ref:
-            zip_ref.extractall(extract_dir)
-
-    try:
-        
-        ENCODER_FILE_ID = "19LJdN6IuolIQBRUvXmQipSIcguHCmGyP"
-        DECODER_FILE_ID = "1_4ctGhXZKDEZjydo7B0duc4CktF55Tgu"
-
-        model_root = "Models"
-        encoder_zip = os.path.join(model_root, "encoder_tf.zip")
-        decoder_zip = os.path.join(model_root, "decoder_tf.zip")
-
-        encoder_dir = os.path.join(model_root, "encoder_tf")
-        decoder_dir = os.path.join(model_root, "decoder_tf")
-
-        os.makedirs(model_root, exist_ok=True)
-
-        # Download & extract 
-        download_and_extract(
-            ENCODER_FILE_ID,
-            encoder_zip,
-            encoder_dir
-        )
-
-        download_and_extract(
-            DECODER_FILE_ID,
-            decoder_zip,
-            decoder_dir
-        )
-
-        # Load saved models
-        encoder_sm = tf.saved_model.load(encoder_dir)
-        decoder_sm = tf.saved_model.load(decoder_dir)
-
-        encoder = encoder_sm.signatures["serve"]
-        decoder = decoder_sm.signatures["serve"]
-        if encoder is None or decoder is None:
-            raise RuntimeError("SavedModel 'serve' signature not found")
-
-        return encoder, decoder
-
-    except Exception as e:
-        st.error(f"Model loading failed: {e}")
-        return None, None
-
+    return encoder, decoder
 
 
 # --- 2. Image Preprocessing Function ---
@@ -937,11 +879,7 @@ def render_hide_page(encoder):
                 with st.spinner("Hiding secret image..."):
                     try:
                         # Encode secret into cover
-                        container_tensor = encoder(
-                        processed_secret_img,
-                        processed_cover_img
-                        )["output_0"].numpy()
-
+                        container_tensor = encoder.predict([processed_secret_img, processed_cover_img])
                         container_image_pil = postprocess_image(container_tensor)
 
                         st.success("✅ Secret image hidden successfully!")
@@ -1054,7 +992,7 @@ def render_reveal_page(decoder):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- DIRECT UPLOAD  ---
+    # --- DIRECT UPLOAD (no outer boxes) ---
     container_file = st.file_uploader("Upload the Container Image", type=["jpg", "png", "jpeg"], key="container")
 
     # --- PROCESS IMAGE ---
@@ -1068,10 +1006,7 @@ def render_reveal_page(decoder):
             if st.button("Reveal Secret Image", use_container_width=True):
                 with st.spinner("Revealing secret image..."):
                     try:
-                        revealed_tensor = decoder(
-                        processed_container_img
-                        )["output_0"].numpy()
-
+                        revealed_tensor = decoder.predict(processed_container_img)
                         revealed_image_pil = postprocess_image(revealed_tensor)
 
                         st.success("Secret image revealed!")
