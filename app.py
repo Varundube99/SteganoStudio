@@ -226,13 +226,24 @@ def load_steganography_models():
         return encoder, decoder
 
     except TypeError as e:
-        # This is the exact exception class shown in your Streamlit Cloud logs.
+        # This is the exact exception class shown in your Streamlit Cloud logs when
+        # deserialization of a .keras model fails (usually version mismatch).
         st.error(
             "Failed to deserialize the .keras model on this environment. "
             "This is usually caused by a TensorFlow/Keras version mismatch between where the model "
             "was saved and where it's being loaded."
         )
-        st.caption(f"Runtime versions: tensorflow={tf.__version__}, keras={tf.keras.__version__}")
+
+        # Keras 3 may not be accessible via tf.keras.__version__, so guard this.
+        keras_version = "unknown"
+        try:
+            import keras  # type: ignore
+
+            keras_version = getattr(keras, "__version__", "unknown")
+        except Exception:
+            pass
+
+        st.caption(f"Runtime versions: tensorflow={tf.__version__}, keras={keras_version}")
         st.caption(f"Deserialization error: {e}")
 
         # Optional fallback: upload these two files to the same HF repo to enable this path:
