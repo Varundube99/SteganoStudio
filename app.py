@@ -7,6 +7,11 @@ from PIL import Image
 import os
 import io
 
+# Optional: if you later choose to load weights instead of full .keras models,
+# you can rebuild the model architectures (these match your training `Model.py`).
+from tensorflow.keras.layers import Input, Conv2D, Concatenate, BatchNormalization, Activation
+from tensorflow.keras.models import Model
+
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Image Processing App", page_icon="🖼️", layout="wide")
 
@@ -168,32 +173,90 @@ def load_steganography_models():
     repo_id = "dubevarun/stegano-models"
     token = st.secrets["HF_TOKEN"]
 
-    encoder_path = hf_hub_download(
-        repo_id=repo_id,
-        filename="final_encoder.keras",
-        token=token
-    )
+    def _conv_block(input_tensor, filters, kernel_size=(3, 3)):
+        x = Conv2D(filters, kernel_size, padding="same")(input_tensor)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+        return x
 
-    decoder_path = hf_hub_download(
-        repo_id=repo_id,
-        filename="final_decoder.keras",
-        token=token
-    )
+    def _build_encoder(img_shape=(64, 64, 3)):
+        secret_input = Input(shape=img_shape, name="secret_input")
+        cover_input = Input(shape=img_shape, name="cover_input")
+        prep_net = _conv_block(secret_input, filters=64)
+        prep_net = _conv_block(prep_net, filters=64)
+        prep_net = _conv_block(prep_net, filters=64)
+        prep_net = _conv_block(prep_net, filters=64)
+        concat = Concatenate(name="hide_layer_concat")([cover_input, prep_net])
+        hide_net = _conv_block(concat, filters=64)
+        hide_net = _conv_block(hide_net, filters=64)
+        hide_net = _conv_block(hide_net, filters=64)
+        container_output = Conv2D(
+            filters=3,
+            kernel_size=(1, 1),
+            activation="sigmoid",
+            padding="same",
+            name="container_output",
+        )(hide_net)
+        return Model(inputs=[secret_input, cover_input], outputs=container_output, name="Encoder")
 
-    encoder = load_model(
-       encoder_path,
-       compile=False,
-       safe_mode=False
-      )
+    def _build_decoder(img_shape=(64, 64, 3)):
+        container_input = Input(shape=img_shape, name="reveal_input")
+        reveal_net = _conv_block(container_input, filters=64)
+        reveal_net = _conv_block(reveal_net, filters=64)
+        reveal_net = _conv_block(reveal_net, filters=64)
+        reveal_net = _conv_block(reveal_net, filters=64)
+        reveal_output = Conv2D(
+            filters=3,
+            kernel_size=(1, 1),
+            activation="sigmoid",
+            padding="same",
+            name="reveal_output",
+        )(reveal_net)
+        return Model(inputs=container_input, outputs=reveal_output, name="Decoder")
 
-    decoder = load_model(
-        decoder_path,
-        compile=False,
-        safe_mode=False
-      )
+    # Prefer loading full serialized models (.keras). If that fails (common when TF/Keras
+    # versions differ between training and deployment), fall back to "rebuild + load weights"
+    # if you provide weight files on Hugging Face.
+    try:
+        encoder_path = hf_hub_download(repo_id=repo_id, filename="final_encoder.keras", token=token)
+        decoder_path = hf_hub_download(repo_id=repo_id, filename="final_decoder.keras", token=token)
 
+        encoder = tf.keras.models.load_model(encoder_path, compile=False, safe_mode=False)
+        decoder = tf.keras.models.load_model(decoder_path, compile=False, safe_mode=False)
+        return encoder, decoder
 
-    return encoder, decoder
+    except TypeError as e:
+        # This is the exact exception class shown in your Streamlit Cloud logs.
+        st.error(
+            "Failed to deserialize the .keras model on this environment. "
+            "This is usually caused by a TensorFlow/Keras version mismatch between where the model "
+            "was saved and where it's being loaded."
+        )
+        st.caption(f"Runtime versions: tensorflow={tf.__version__}, keras={tf.keras.__version__}")
+        st.caption(f"Deserialization error: {e}")
+
+        # Optional fallback: upload these two files to the same HF repo to enable this path:
+        # - final_encoder.weights.h5
+        # - final_decoder.weights.h5
+        try:
+            encoder_w_path = hf_hub_download(repo_id=repo_id, filename="final_encoder.weights.h5", token=token)
+            decoder_w_path = hf_hub_download(repo_id=repo_id, filename="final_decoder.weights.h5", token=token)
+
+            encoder = _build_encoder(img_shape=IMG_SHAPE)
+            decoder = _build_decoder(img_shape=IMG_SHAPE)
+
+            # Build variables before loading weights
+            _ = encoder([tf.zeros((1, *IMG_SHAPE)), tf.zeros((1, *IMG_SHAPE))])
+            _ = decoder(tf.zeros((1, *IMG_SHAPE)))
+
+            encoder.load_weights(encoder_w_path)
+            decoder.load_weights(decoder_w_path)
+            st.success("Loaded models via weights fallback.")
+            return encoder, decoder
+        except Exception as w_e:
+            st.error("Weights fallback is not available (or also failed).")
+            st.caption(f"Fallback error: {w_e}")
+            return None, None
 
 
 # --- 2. Image Preprocessing Function ---
