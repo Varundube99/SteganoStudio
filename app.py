@@ -180,8 +180,18 @@ def load_steganography_models():
         token=token
     )
 
-    encoder = load_model(encoder_path, compile=False)
-    decoder = load_model(decoder_path, compile=False)
+    encoder = load_model(
+       encoder_path,
+       compile=False,
+       safe_mode=False
+      )
+
+    decoder = load_model(
+        decoder_path,
+        compile=False,
+        safe_mode=False
+      )
+
 
     return encoder, decoder
 
