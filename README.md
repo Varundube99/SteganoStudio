@@ -330,7 +330,8 @@ Varun Dubey
 
 AI / ML Enthusiast  
 
-Email: varundube99@gmail.com
+Email: mailto:varundube99@gmail.com
+
 
 
 
