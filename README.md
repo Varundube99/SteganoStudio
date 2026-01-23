@@ -8,7 +8,7 @@ AI-Powered Image Steganography using Deep Learning
 
 
 
-\## 📌 Overview
+📌 Overview
 
 
 
@@ -28,7 +28,7 @@ The application is built using Streamlit for the frontend, while trained models 
 
 
 
-\## ✨ Key Features
+✨ Key Features
 
 
 
@@ -50,7 +50,7 @@ The application is built using Streamlit for the frontend, while trained models 
 
 
 
-\## 🧠 How It Works
+🧠 How It Works
 
 
 
@@ -58,7 +58,7 @@ The system consists of two trained neural networks:
 
 
 
-\### Encoder
+ Encoder
 
 \- Takes two inputs:
 
@@ -70,7 +70,7 @@ The system consists of two trained neural networks:
 
 
 
-\### Decoder
+ Decoder
 
 \- Takes the container image as input
 
@@ -86,7 +86,7 @@ Both networks are trained jointly to minimize visual distortion while preserving
 
 
 
-\## 🏗️ Architecture
+🏗️ Architecture
 
 
 
@@ -106,11 +106,11 @@ Secret Image + Cover Image → Encoder → Container Image → Decoder → Revea
 
 
 
-\## 🖥️ Application Pages
+🖥️ Application Pages
 
 
 
-\### Home
+ Home
 
 \- Project overview
 
@@ -120,7 +120,7 @@ Secret Image + Cover Image → Encoder → Container Image → Decoder → Revea
 
 
 
-\### Hide Image
+ Hide Image
 
 \- Upload secret image
 
@@ -132,7 +132,7 @@ Secret Image + Cover Image → Encoder → Container Image → Decoder → Revea
 
 
 
-\### Reveal Image
+ Reveal Image
 
 \- Upload container image
 
@@ -146,7 +146,7 @@ Secret Image + Cover Image → Encoder → Container Image → Decoder → Revea
 
 
 
-\## 🔐 Model Security \& Deployment
+🔐 Model Security \& Deployment
 
 
 
@@ -178,7 +178,7 @@ This ensures:
 
 
 
-\## 📁 Project Structure
+📁 Project Structure
 
 
 
@@ -200,11 +200,11 @@ This ensures:
 
 
 
-\## ⚙️ Installation \& Local Setup
+⚙️ Installation \& Local Setup
 
 
 
-\### Clone the repository
+ Clone the repository
 
 
 
@@ -214,7 +214,7 @@ cd your-repo-name
 
 
 
-\### Install dependencies
+ Install dependencies
 
 
 
@@ -222,11 +222,11 @@ pip install -r requirements.txt
 
 
 
-\### Configure Hugging Face token
+ Configure Hugging Face token
 
 
 
-\## ▶️ Run the Application
+▶️ Run the Application
 
 
 
@@ -246,7 +246,7 @@ Simply open the link, upload images, and start hiding or revealing secrets.
 
 
 
-\## ☁️ Streamlit Cloud Deployment
+☁️ Streamlit Cloud Deployment
 
 
 
@@ -266,7 +266,7 @@ Models are downloaded from Hugging Face at runtime and cached for performance.
 
 
 
-\## ⚠️ Limitations
+⚠️ Limitations
 
 
 
@@ -286,7 +286,7 @@ Models are downloaded from Hugging Face at runtime and cached for performance.
 
 
 
-\## 🚀 Future Work
+🚀 Future Work
 
 
 
@@ -306,7 +306,7 @@ Models are downloaded from Hugging Face at runtime and cached for performance.
 
 
 
-\## 📚 Research Background
+📚 Research Background
 
 
 
@@ -322,7 +322,7 @@ Traditional rule-based steganography techniques are fragile, while neural approa
 
 
 
-\## 🧑‍💻 Author
+🧑‍💻 Author
 
 
 
@@ -338,7 +338,7 @@ Email: varundube99@gmail.com
 
 
 
-\## 📜 License
+📜 License
 
 
 
