@@ -4,7 +4,6 @@
 
 **AI-Powered Image Steganography using Deep Learning**
 
-      <div align="center"> [🌐 Live Demo](https://steganostudio.streamlit.app/) </div>
 </div>
 
 ---
