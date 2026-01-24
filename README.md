@@ -4,13 +4,7 @@
 
 **AI-Powered Image Steganography using Deep Learning**
 
-[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
-[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Educational-blue?style=for-the-badge)](LICENSE)
-
-[🌐 Live Demo](https://steganostudio.streamlit.app/) • [📖 Documentation](#-how-it-works) • [🐛 Report Bug](https://github.com/Varundube99/SteganoStudio/issues) • [💡 Request Feature](https://github.com/Varundube99/SteganoStudio/issues)
-
+      <div align="center"> [🌐 Live Demo](https://steganostudio.streamlit.app/) </div>
 </div>
 
 ---
@@ -314,10 +308,6 @@ This project is intended for **educational and research purposes**.
 
 <div align="center">
 
-**Made with ❤️ using Streamlit, TensorFlow, and Deep Learning**
-
 ⭐ **Star this repo if you find it helpful!** ⭐
-
-[⬆ Back to Top](#-stegano-studio)
 
 </div>
